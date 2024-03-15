@@ -13,6 +13,31 @@ class Cliente:
         self.nome = nome
         self.telefone = telefone
         self.endereco = endereco
+        
+class Vendas:
+    def __init__(self,id, cliente_id, item_id, quantidade):
+        self.id = id
+        self.cliente_id = cliente_id
+        self.item_id = item_id
+        self.quantidade = quantidade
+
+class Funcionario:
+    def __init__(self, id, nome, telefone, endereco, cpf):
+        self.id = id
+        self.nome = nome
+        self.telefone = telefone
+        self.endereco = endereco
+        self.cpf = cpf
+
+class Fornecedor:
+    def __init__(self, id, nome, telefone, endereco, cpf_cnpj):
+        self.id = id
+        self.nome = nome
+        self.telefone = telefone
+        self.endereco = endereco
+        self.cpf_cnpj = cpf_cnpj
+        self.produtos_fornecidos = {}
+
 
 class GerenciadorCRUD:
     def __init__(self, db_file):
@@ -24,6 +49,10 @@ class GerenciadorCRUD:
                          (id INTEGER PRIMARY KEY, nome TEXT, telefone TEXT, endereco TEXT)''')
         self.c.execute('''CREATE TABLE IF NOT EXISTS vendas
                          (id INTEGER PRIMARY KEY, cliente_id INTEGER, item_id INTEGER, quantidade INTEGER, total REAL)''')
+        self.c.execute('''CREATE TABLE IF NOT EXISTS funcionarios
+                         (id INTEGER PRIMARY KEY, nome TEXT, telefone TEXT, endereco TEXT, cpf TEXT)''')
+        self.c.execute('''CREATE TABLE IF NOT EXISTS fornecedores
+                         (id INTEGER PRIMARY KEY, nome TEXT, telefone TEXT, endereco TEXT, cpf_cnpj TEXT)''')
         self.conn.commit()
 
     def inserir_estoque(self, nome, quantidade, preco_unit):
@@ -145,6 +174,96 @@ class GerenciadorCRUD:
         else:
             print("Cliente não encontrado.")
 
+    def inserir_funcionario(self, nome, telefone, endereco, cpf):
+        self.c.execute("INSERT INTO funcionarios (nome, telefone, endereco, cpf) VALUES (?, ?, ?, ?)",
+                       (nome, telefone, endereco, cpf))
+        self.conn.commit()
+        print("Funcionário inserido com sucesso.")
+
+    def alterar_funcionario(self, id, nome, telefone, endereco, cpf):
+        self.c.execute("UPDATE funcionarios SET nome=?, telefone=?, endereco=?, cpf=? WHERE id=?",
+                       (nome, telefone, endereco, cpf, id))
+        self.conn.commit()
+        print("Funcionário alterado com sucesso.")
+
+    def pesquisar_funcionario_por_nome(self, nome):
+        self.c.execute("SELECT * FROM funcionarios WHERE nome LIKE ?", ('%' + nome + '%',))
+        funcionarios = self.c.fetchall()
+        if funcionarios:
+            for funcionario in funcionarios:
+                print("ID:", funcionario[0])
+                print("Nome:", funcionario[1])
+                print("Telefone:", funcionario[2])
+                print("Endereço:", funcionario[3])
+                print("CPF:", funcionario[4])
+                print("--------------------------")
+        else:
+            print("Nenhum funcionário encontrado com esse nome.")
+
+    def remover_funcionario(self, id):
+        self.c.execute("DELETE FROM funcionarios WHERE id=?", (id,))
+        self.conn.commit()
+        print("Funcionário removido com sucesso.")
+
+    def listar_todos_funcionarios(self):
+        self.c.execute("SELECT * FROM funcionarios")
+        funcionarios = self.c.fetchall()
+        if funcionarios:
+            for funcionario in funcionarios:
+                print("ID:", funcionario[0])
+                print("Nome:", funcionario[1])
+                print("Telefone:", funcionario[2])
+                print("Endereço:", funcionario[3])
+                print("CPF:", funcionario[4])
+                print("--------------------------")
+        else:
+            print("Nenhum funcionário encontrado.")
+
+    def inserir_fornecedor(self, nome, telefone, endereco, cpf_cnpj):
+        self.c.execute("INSERT INTO fornecedores (nome, telefone, endereco, cpf_cnpj) VALUES (?, ?, ?, ?)",
+                       (nome, telefone, endereco, cpf_cnpj))
+        self.conn.commit()
+        print("Fornecedor inserido com sucesso.")
+
+    def alterar_fornecedor(self, id, nome, telefone, endereco, cpf_cnpj):
+        self.c.execute("UPDATE fornecedores SET nome=?, telefone=?, endereco=?, cpf_cnpj=? WHERE id=?",
+                       (nome, telefone, endereco, cpf_cnpj, id))
+        self.conn.commit()
+        print("Fornecedor alterado com sucesso.")
+
+    def pesquisar_fornecedor_por_nome(self, nome):
+        self.c.execute("SELECT * FROM fornecedores WHERE nome LIKE ?", ('%' + nome + '%',))
+        fornecedores = self.c.fetchall()
+        if fornecedores:
+            for fornecedor in fornecedores:
+                print("ID:", fornecedor[0])
+                print("Nome:", fornecedor[1])
+                print("Telefone:", fornecedor[2])
+                print("Endereço:", fornecedor[3])
+                print("CPF/CNPJ:", fornecedor[4])
+                print("--------------------------")
+        else:
+            print("Nenhum fornecedor encontrado com esse nome.")
+
+    def remover_fornecedor(self, id):
+        self.c.execute("DELETE FROM fornecedores WHERE id=?", (id,))
+        self.conn.commit()
+        print("Fornecedor removido com sucesso.")
+
+    def listar_todos_fornecedores(self):
+        self.c.execute("SELECT * FROM fornecedores")
+        fornecedores = self.c.fetchall()
+        if fornecedores:
+            for fornecedor in fornecedores:
+                print("ID:", fornecedor[0])
+                print("Nome:", fornecedor[1])
+                print("Telefone:", fornecedor[2])
+                print("Endereço:", fornecedor[3])
+                print("CPF/CNPJ:", fornecedor[4])
+                print("--------------------------")
+        else:
+            print("Nenhum fornecedor encontrado.")
+
     def registrar_venda(self, cliente_id, item_id, quantidade):
         # Obter o preço unitário do item
         self.c.execute("SELECT preco_unit, quantidade FROM estoque WHERE id=?", (item_id,))
@@ -195,6 +314,25 @@ class GerenciadorCRUD:
         self.c.execute("SELECT COUNT(*) FROM clientes")
         total_clientes = self.c.fetchone()[0]
         print("Total de clientes:", total_clientes)
+
+    def gerar_relatorio_funcionarios(self):
+        self.c.execute("SELECT COUNT(*) FROM funcionarios")
+        total_funcionarios = self.c.fetchone()[0]
+        print("Total de funcionários:", total_funcionarios)
+
+    def gerar_relatorio_fornecedores(self):
+        self.c.execute("SELECT COUNT(*), SUM(quantidade), produto FROM fornecedores")
+        relatorio = self.c.fetchall()
+        if relatorio:
+            for item in relatorio:
+                print("Nome:", item[0])
+                print("Telefone:", item[1])
+                print("Endereço:", item[2])
+                print("CPF/CNPJ:", item[3])
+                print("Produtos fornecidos:", item[4])
+                print("--------------------------")
+        else:
+            print("Nenhum fornecedor encontrado.")
 
     def fechar_conexao(self):
         self.conn.close()
